@@ -53,8 +53,8 @@
 #define LCD_CLK_GPIO_Port GPIOA
 #define LCD_DIN_Pin GPIO_PIN_7
 #define LCD_DIN_GPIO_Port GPIOA
-#define LCD_BL_Pin GPIO_PIN_7
-#define LCD_BL_GPIO_Port GPIOC
+#define LCD_BL_NIE_PODLACZAC__Pin GPIO_PIN_7
+#define LCD_BL_NIE_PODLACZAC__GPIO_Port GPIOC
 #define LCD_DC_Pin GPIO_PIN_8
 #define LCD_DC_GPIO_Port GPIOA
 #define LCD_RST_Pin GPIO_PIN_9

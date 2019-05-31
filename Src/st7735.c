@@ -277,44 +277,50 @@ void ST7735_InvertColors(bool invert) {
 #define ARRAY_LEN 255
 
 void ST7735_WriteNumber(uint16_t x, uint16_t y, float num,
-                        FontDef font, uint16_t color, uint16_t bgcolor) {
-    int32_t Number = num;
-    num -= Number;
-    num *= 100;
-    num = (int) num;
-    int16_t Num_Bit = 0, Str_Bit = 0;
-    uint8_t Str_Array[ARRAY_LEN] = {0}, Num_Array[ARRAY_LEN] = {0};
-    uint8_t *pStr = Str_Array;
+	FontDef font, uint16_t color, uint16_t bgcolor) {
+	int32_t Number = num;
+	num -= Number;
+	num *= 100;
+	num = (int)num;
+	int16_t Num_Bit = 0, Str_Bit = 0;
+	uint8_t Str_Array[ARRAY_LEN] = { 0 }, Num_Array[ARRAY_LEN] = { 0 };
+	uint8_t *pStr = Str_Array;
 
-    if (x >= 160 || y >= 128) {
-        return;
-    }
+	if (x >= 160 || y >= 128) {
+		return;
+	}
 
-    for (int i = 0; i < 2; i++) {
-        Num_Array[Num_Bit] = (int) num % 10 + '0';
-        Num_Bit++;
-        num /= 10;
-    }
+	for (int i = 0; i < 2; i++) {
+		Num_Array[Num_Bit] = (int)num % 10 + '0';
+		Num_Bit++;
+		num /= 10;
+	}
 
-    Num_Array[Num_Bit] = '.';
-    Num_Bit++;
+	Num_Array[Num_Bit] = '.';
+	Num_Bit++;
 
-    //Converts a number to a string
-    while (Number) {
-        Num_Array[Num_Bit] = Number % 10 + '0';
-        Num_Bit++;
-        Number /= 10;
-    }
+	//Converts a number to a string
+	if (Number != 0) {
+		while (Number) {
+			Num_Array[Num_Bit] = Number % 10 + '0';
+			Num_Bit++;
+			Number /= 10;
+		}
+	}
+	else {
+		Num_Array[Num_Bit] = '0';
+		Num_Bit++;
+	}
 
 
-    //The string is inverted
-    while (Num_Bit > 0) {
-        Str_Array[Str_Bit] = Num_Array[Num_Bit - 1];
-        Str_Bit++;
-        Num_Bit--;
-    }
+	//The string is inverted
+	while (Num_Bit > 0) {
+		Str_Array[Str_Bit] = Num_Array[Num_Bit - 1];
+		Str_Bit++;
+		Num_Bit--;
+	}
 
-    //show
-    ST7735_WriteString(x, y, (const char *) pStr, font, color, bgcolor);
+	//show
+	ST7735_WriteString(x, y, (const char *)pStr, font, color, bgcolor);
 }
 
