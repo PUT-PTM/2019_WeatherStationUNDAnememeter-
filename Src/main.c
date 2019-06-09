@@ -94,7 +94,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         position2 = position1;
         position1 = pulse_count / 2;
         angle_remainder = abs(position2 - position1);
-        if (angle_remainder > 150)
+        if (angle_remainder > 140)
             angle_remainder = 201 - angle_remainder;
         angular_velocity = (angle_remainder * ANGLE / T_TIM) * M_PI / 180;
         velocity = angular_velocity * RADIUS * KM_H;
@@ -118,30 +118,34 @@ void sensor_init() {
 /**
  * Initialize ST7735S LCD display
  */
-
 void LCD_init() {
     ST7735_Init();
     ST7735_DrawImage(0, 0, 160, 128, (uint16_t *) widget);
     HAL_Delay(3000);
 
-    ST7735_FillScreen(ST7735_BACKGROUND);
+    ST7735_FillScreen(ST7735_BGCOLOR);
     ST7735_DrawImage(10, 7, 24, 24, (uint16_t *) termometer);
     ST7735_DrawImage(10, 37, 24, 24, (uint16_t *) barometer);
     ST7735_DrawImage(10, 67, 24, 24, (uint16_t *) humidity_img);
     ST7735_DrawImage(10, 97, 24, 24, (uint16_t *) wind);
 
-    ST7735_WriteString(100, 11, "C", Font_11x18, ST7735_BLACK, ST7735_BACKGROUND);
-    ST7735_WriteString(120, 41, "hPa", Font_11x18, ST7735_BLACK, ST7735_BACKGROUND);
-    ST7735_WriteString(100, 71, "%", Font_11x18, ST7735_BLACK, ST7735_BACKGROUND);
-    ST7735_WriteString(100, 101, "km/h", Font_11x18, ST7735_BLACK, ST7735_BACKGROUND);
+    ST7735_DrawCircle(104, 15, 3, 0, 2, ST7735_BLACK);
+    ST7735_WriteString(111, 11, "C", Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
+    ST7735_WriteString(120, 41, "hPa", Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
+    ST7735_WriteString(100, 71, "%", Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
+    ST7735_WriteString(100, 101, "km/h", Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
 }
 
-void LCD_loop(const float *temp, const float *press, const float *hum, volatile const float *vel) {
-    ST7735_WriteNumber(40, 11, *temp, Font_11x18, ST7735_BLACK, ST7735_BACKGROUND);
-    ST7735_WriteNumber(40, 41, *press, Font_11x18, ST7735_BLACK, ST7735_BACKGROUND);
-    ST7735_WriteNumber(40, 71, *hum, Font_11x18, ST7735_BLACK, ST7735_BACKGROUND);
-//    velocity = 10;
-    ST7735_WriteNumber(40, 101, *vel, Font_11x18, ST7735_BLACK, ST7735_BACKGROUND);
+void LCD_loop() {
+    ST7735_WriteNumber(40, 11, temperature, Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
+    ST7735_WriteNumber(40, 41, pressure_hPa, Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
+    ST7735_WriteNumber(40, 71, humidity, Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
+    if (velocity < 10) {
+        ST7735_FillRectangle(84, 101, 11, 18, ST7735_BGCOLOR);
+        ST7735_WriteNumber(40, 101, velocity, Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
+    } else {
+        ST7735_WriteNumber(40, 101, velocity, Font_11x18, ST7735_BLACK, ST7735_BGCOLOR);
+    }
     HAL_Delay(500);
 }
 
@@ -181,14 +185,11 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-
   	sensor_init();
-
-    HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL); // enkoder
+    HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
     LCD_init();
+
     HAL_TIM_Base_Start_IT(&htim4);
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -198,14 +199,11 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-        /* Sensor ------------------------------------------------*/
         HAL_Delay(100);
         bmp280_read_float(&bmp280, &temperature, &pressure, &humidity);
         pressure_hPa = pressure / 100;
 
-        /* LCD ---------------------------------------------------*/
-
-        LCD_loop(&temperature, &pressure_hPa, &humidity, &velocity);
+        LCD_loop();
     }
   /* USER CODE END 3 */
 
@@ -400,7 +398,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LCD_BL_NIE_PODLACZAC__GPIO_Port, LCD_BL_NIE_PODLACZAC__Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LCD_BL_GPIO_Port, LCD_BL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, LCD_DC_Pin|LCD_RST_Pin, GPIO_PIN_RESET);
@@ -408,12 +406,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LCD_BL_NIE_PODLACZAC__Pin */
-  GPIO_InitStruct.Pin = LCD_BL_NIE_PODLACZAC__Pin;
+  /*Configure GPIO pin : LCD_BL_Pin */
+  GPIO_InitStruct.Pin = LCD_BL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LCD_BL_NIE_PODLACZAC__GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(LCD_BL_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LCD_DC_Pin LCD_RST_Pin */
   GPIO_InitStruct.Pin = LCD_DC_Pin|LCD_RST_Pin;
